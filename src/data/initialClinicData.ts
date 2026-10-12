@@ -154,13 +154,87 @@ export const INITIAL_CLINIC_DATA: ClinicData = {
 
 const STORAGE_KEY = "aurum_clinic_site_data_v1";
 
+export function mergeClinicData(rawParsed: any): ClinicData {
+  if (!rawParsed || typeof rawParsed !== "object") {
+    return INITIAL_CLINIC_DATA;
+  }
+
+  const defaultHero = INITIAL_CLINIC_DATA.hero;
+  const defaultVideo = INITIAL_CLINIC_DATA.video;
+
+  return {
+    clinicName: typeof rawParsed.clinicName === "string" ? rawParsed.clinicName : INITIAL_CLINIC_DATA.clinicName,
+    tagline: typeof rawParsed.tagline === "string" ? rawParsed.tagline : INITIAL_CLINIC_DATA.tagline,
+    whatsappNumber: typeof rawParsed.whatsappNumber === "string" ? rawParsed.whatsappNumber : INITIAL_CLINIC_DATA.whatsappNumber,
+    whatsappMessage: typeof rawParsed.whatsappMessage === "string" ? rawParsed.whatsappMessage : INITIAL_CLINIC_DATA.whatsappMessage,
+    hero: {
+      doctorName: rawParsed.hero?.doctorName ?? defaultHero.doctorName,
+      title: rawParsed.hero?.title ?? defaultHero.title,
+      subtitle: rawParsed.hero?.subtitle ?? defaultHero.subtitle,
+      photo: rawParsed.hero?.photo || defaultHero.photo,
+      ctaText: rawParsed.hero?.ctaText || defaultHero.ctaText,
+    },
+    video: {
+      title: rawParsed.video?.title ?? defaultVideo.title,
+      subtitle: rawParsed.video?.subtitle ?? defaultVideo.subtitle,
+      videoUrl: typeof rawParsed.video?.videoUrl === "string" ? rawParsed.video.videoUrl : defaultVideo.videoUrl,
+      poster: rawParsed.video?.poster || defaultVideo.poster,
+      caption: rawParsed.video?.caption ?? defaultVideo.caption,
+    },
+    beforeAfterCases: Array.isArray(rawParsed.beforeAfterCases) && rawParsed.beforeAfterCases.length > 0
+      ? rawParsed.beforeAfterCases.map((c: any, i: number) => {
+          const fallback = INITIAL_CLINIC_DATA.beforeAfterCases[i] || INITIAL_CLINIC_DATA.beforeAfterCases[0];
+          return {
+            id: c?.id || fallback.id,
+            title: c?.title || fallback.title,
+            procedure: c?.procedure || fallback.procedure,
+            category: c?.category || fallback.category,
+            beforeImage: c?.beforeImage || fallback.beforeImage,
+            afterImage: c?.afterImage || fallback.afterImage,
+            description: c?.description || fallback.description,
+            sessions: c?.sessions || fallback.sessions,
+          };
+        })
+      : INITIAL_CLINIC_DATA.beforeAfterCases,
+    professionals: Array.isArray(rawParsed.professionals) && rawParsed.professionals.length > 0
+      ? rawParsed.professionals.map((p: any, i: number) => {
+          const fallback = INITIAL_CLINIC_DATA.professionals[i] || INITIAL_CLINIC_DATA.professionals[0];
+          return {
+            id: p?.id || fallback.id,
+            name: p?.name || fallback.name,
+            role: p?.role || fallback.role,
+            crm: p?.crm || fallback.crm,
+            specialty: p?.specialty || fallback.specialty,
+            photo: p?.photo || fallback.photo,
+            bio: p?.bio || fallback.bio,
+          };
+        })
+      : INITIAL_CLINIC_DATA.professionals,
+    clinicPhotos: Array.isArray(rawParsed.clinicPhotos) && rawParsed.clinicPhotos.length > 0
+      ? rawParsed.clinicPhotos.map((cp: any, i: number) => {
+          const fallback = INITIAL_CLINIC_DATA.clinicPhotos[i] || INITIAL_CLINIC_DATA.clinicPhotos[0];
+          return {
+            id: cp?.id || fallback.id,
+            title: cp?.title || fallback.title,
+            category: cp?.category || fallback.category,
+            image: cp?.image || fallback.image,
+            description: cp?.description || fallback.description,
+          };
+        })
+      : INITIAL_CLINIC_DATA.clinicPhotos,
+    address: typeof rawParsed.address === "string" ? rawParsed.address : INITIAL_CLINIC_DATA.address,
+    phone: typeof rawParsed.phone === "string" ? rawParsed.phone : INITIAL_CLINIC_DATA.phone,
+    openingHours: typeof rawParsed.openingHours === "string" ? rawParsed.openingHours : INITIAL_CLINIC_DATA.openingHours,
+  };
+}
+
 export function loadClinicData(): ClinicData {
   if (typeof window === "undefined") return INITIAL_CLINIC_DATA;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { ...INITIAL_CLINIC_DATA, ...parsed };
+      return mergeClinicData(parsed);
     }
   } catch (err) {
     console.warn("Erro ao carregar dados locais da clínica:", err);
@@ -241,8 +315,8 @@ export function resetClinicData(): ClinicData {
   return INITIAL_CLINIC_DATA;
 }
 
-export function createWhatsAppLink(phoneNumber: string, message: string): string {
-  const cleanNumber = phoneNumber.replace(/\D/g, "");
-  const encodedText = encodeURIComponent(message);
+export function createWhatsAppLink(phoneNumber?: string, message?: string): string {
+  const cleanNumber = (phoneNumber || "5511987654321").replace(/\D/g, "");
+  const encodedText = encodeURIComponent(message || "Olá! Gostaria de agendar uma consulta.");
   return `https://wa.me/${cleanNumber}?text=${encodedText}`;
 }

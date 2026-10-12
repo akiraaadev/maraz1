@@ -1,9 +1,10 @@
 import React, { useState, useRef } from "react";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { INITIAL_CLINIC_DATA } from "../data/initialClinicData";
 
 interface VideoSectionProps {
-  videoUrl: string;
-  posterUrl: string;
+  videoUrl?: string;
+  posterUrl?: string;
 }
 
 export const VideoSection: React.FC<VideoSectionProps> = ({
@@ -15,7 +16,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const safeVideoUrl = videoUrl || "";
+  const safeVideoUrl = videoUrl || INITIAL_CLINIC_DATA.video.videoUrl;
+  const safePosterUrl = posterUrl || INITIAL_CLINIC_DATA.video.poster;
   const isYouTube = Boolean(safeVideoUrl && (safeVideoUrl.includes("youtube.com") || safeVideoUrl.includes("youtu.be")));
   const isVimeo = Boolean(safeVideoUrl && safeVideoUrl.includes("vimeo.com"));
 
@@ -73,7 +75,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
       <div className="relative w-full h-full max-w-md mx-auto overflow-hidden bg-black flex items-center justify-center shadow-2xl">
         {isYouTube ? (
           <iframe
-            src={getYouTubeEmbedUrl(videoUrl)}
+            src={getYouTubeEmbedUrl(safeVideoUrl)}
             title="Vídeo Institucional"
             className="w-full h-full border-0 object-cover"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -81,7 +83,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           />
         ) : isVimeo ? (
           <iframe
-            src={videoUrl}
+            src={safeVideoUrl}
             title="Vídeo Institucional"
             className="w-full h-full border-0 object-cover"
             allow="autoplay; fullscreen; picture-in-picture"
@@ -95,8 +97,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             {/* HTML5 Native Video element in vertical mode */}
             <video
               ref={videoRef}
-              src={videoUrl}
-              poster={posterUrl}
+              src={safeVideoUrl}
+              poster={safePosterUrl}
               playsInline
               loop
               onTimeUpdate={handleTimeUpdate}

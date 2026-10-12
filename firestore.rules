@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Configurações institucionais da clínica compartilhadas
+    match /clinic_data/{documentId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Arquivos de fotos e vídeos salvos no banco de dados
+    match /media_files/{mediaId} {
+      allow read: if true;
+      allow write: if true;
+
+      match /chunks/{chunkId} {
+        allow read: if true;
+        allow write: if true;
+      }
+    }
+
+    // Default deny para qualquer outro caminho
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "entities": {
+    "ClinicConfig": {
+      "title": "ClinicConfig",
+      "description": "Configurações institucionais da clínica, contatos, corpo clínico e fotos",
+      "type": "object",
+      "properties": {
+        "clinicName": {
+          "type": "string",
+          "description": "Nome oficial da clínica"
+        },
+        "tagline": {
+          "type": "string",
+          "description": "Slogan da clínica"
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "description": "Número do WhatsApp com DDI e DDD"
+        },
+        "whatsappMessage": {
+          "type": "string",
+          "description": "Mensagem padrão para WhatsApp"
+        },
+        "hero": {
+          "type": "object",
+          "description": "Dados da seção inicial"
+        },
+        "video": {
+          "type": "object",
+          "description": "Vídeo e capa institucional"
+        },
+        "beforeAfterCases": {
+          "type": "array",
+          "description": "Casos de antes e depois"
+        },
+        "professionals": {
+          "type": "array",
+          "description": "Corpo clínico e CRM"
+        },
+        "clinicPhotos": {
+          "type": "array",
+          "description": "Fotos dos ambientes da clínica"
+        },
+        "address": {
+          "type": "string",
+          "description": "Endereço físico"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Telefone de contato"
+        },
+        "openingHours": {
+          "type": "string",
+          "description": "Horário de funcionamento"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Data e hora da última atualização"
+        }
+      },
+      "required": ["clinicName", "whatsappNumber", "hero", "video"]
+    },
+    "MediaFile": {
+      "title": "MediaFile",
+      "description": "Arquivo de mídia persistido no banco de dados",
+      "type": "object",
+      "properties": {
+        "mediaId": {
+          "type": "string",
+          "description": "Identificador único da mídia"
+        },
+        "name": {
+          "type": "string",
+          "description": "Nome do arquivo"
+        },
+        "type": {
+          "type": "string",
+          "description": "MIME type do arquivo"
+        },
+        "size": {
+          "type": "number",
+          "description": "Tamanho em bytes"
+        },
+        "totalChunks": {
+          "type": "number",
+          "description": "Total de partes divididas"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Data de envio"
+        }
+      },
+      "required": ["mediaId", "type", "totalChunks"]
+    },
+    "MediaChunk": {
+      "title": "MediaChunk",
+      "description": "Fatia de dados de um arquivo pesado",
+      "type": "object",
+      "properties": {
+        "chunkIndex": {
+          "type": "number",
+          "description": "Índice da fatia (0 a N)"
+        },
+        "data": {
+          "type": "string",
+          "description": "Conteúdo codificado em base64 da fatia"
+        }
+      },
+      "required": ["chunkIndex", "data"]
+    }
+  },
+  "firestore": {
+    "/clinic_data/{documentId}": {
+      "schema": {
+        "$ref": "#/entities/ClinicConfig"
+      },
+      "description": "Documentos de configuração institucional da clínica compartilhados para todos os dispositivos"
+    },
+    "/media_files/{mediaId}": {
+      "schema": {
+        "$ref": "#/entities/MediaFile"
+      },
+      "description": "Metadados dos arquivos de mídia armazenados no banco"
+    },
+    "/media_files/{mediaId}/chunks/{chunkId}": {
+      "schema": {
+        "$ref": "#/entities/MediaChunk"
+      },
+      "description": "Partes do arquivo de vídeo ou foto para remontagem em qualquer dispositivo"
+    }
+  }
+}

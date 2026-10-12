@@ -1,22 +1,23 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Sparkles, MoveHorizontal, Info, MessageCircle } from "lucide-react";
-import { BeforeAfterCase, createWhatsAppLink } from "../data/initialClinicData";
+import { BeforeAfterCase, INITIAL_CLINIC_DATA, createWhatsAppLink } from "../data/initialClinicData";
 
 interface BeforeAfterSectionProps {
-  cases: BeforeAfterCase[];
-  whatsappNumber: string;
+  cases?: BeforeAfterCase[];
+  whatsappNumber?: string;
 }
 
 export const BeforeAfterSection: React.FC<BeforeAfterSectionProps> = ({
   cases,
   whatsappNumber,
 }) => {
+  const safeCases = (Array.isArray(cases) && cases.length > 0) ? cases : INITIAL_CLINIC_DATA.beforeAfterCases;
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0);
   const [sliderPosition, setSliderPosition] = useState(50); // percentage 0 to 100
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentCase = cases[selectedCaseIndex] || cases[0];
+  const currentCase = safeCases[selectedCaseIndex] || safeCases[0] || INITIAL_CLINIC_DATA.beforeAfterCases[0];
 
   const handleMove = useCallback((clientX: number) => {
     if (!containerRef.current) return;
@@ -72,9 +73,9 @@ export const BeforeAfterSection: React.FC<BeforeAfterSectionProps> = ({
         </div>
 
         {/* Case Switcher Tabs if multiple cases exist */}
-        {cases.length > 1 && (
+        {safeCases.length > 1 && (
           <div className="flex items-center justify-center gap-2 mb-5 overflow-x-auto py-1 no-scrollbar">
-            {cases.map((item, idx) => (
+            {safeCases.map((item, idx) => (
               <button
                 key={item.id}
                 onClick={() => {

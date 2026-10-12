@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Sparkles, Maximize2, X } from "lucide-react";
-import { ClinicPhoto } from "../data/initialClinicData";
+import { ClinicPhoto, INITIAL_CLINIC_DATA } from "../data/initialClinicData";
 
 interface ClinicGallerySectionProps {
-  photos: ClinicPhoto[];
+  photos?: ClinicPhoto[];
 }
 
 export const ClinicGallerySection: React.FC<ClinicGallerySectionProps> = ({ photos }) => {
   const [selectedPhoto, setSelectedPhoto] = useState<ClinicPhoto | null>(null);
+  const safePhotos = (Array.isArray(photos) && photos.length > 0) ? photos : INITIAL_CLINIC_DATA.clinicPhotos;
 
   return (
     <section id="clinica" className="w-full py-16 sm:py-20 px-4 bg-[#FAF9F6] relative">
@@ -32,7 +33,7 @@ export const ClinicGallerySection: React.FC<ClinicGallerySectionProps> = ({ phot
 
         {/* Photos Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {photos.map((photo, index) => (
+          {safePhotos.map((photo, index) => (
             <div
               key={photo.id}
               onClick={() => setSelectedPhoto(photo)}

@@ -62,23 +62,25 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
 
     try {
       setIsUploading(typeKey);
-      showToast("Salvando arquivo no dispositivo...");
+      showToast("Salvando e sincronizando com o banco de dados...");
 
-      // Chaves de slot fixas para garantir reidratação em IndexedDB após refresh
+      // Chaves de slot fixas para garantir reidratação em Firestore e IndexedDB
       let slotKey = typeKey;
       if (typeKey === "hero") slotKey = "hero_photo";
       if (typeKey === "video") slotKey = "video_main";
       if (typeKey === "videoPoster") slotKey = "video_poster";
 
-      const result = await saveMediaFile(slotKey, file);
+      const result = await saveMediaFile(slotKey, file, (pct) => {
+        showToast(`Enviando para o banco de dados... ${pct}%`);
+      });
       onSuccessUrl(result.displayUrl);
-      showToast(`Arquivo salvo com sucesso! (${result.sizeFormatted})`);
+      showToast(`Arquivo salvo no banco de dados! (${result.sizeFormatted})`);
     } catch (err) {
       console.error("Erro no upload:", err);
       try {
         const dataUrl = await fileToDataUrl(file);
         onSuccessUrl(dataUrl);
-        showToast("Arquivo carregado!");
+        showToast("Arquivo carregado com sucesso!");
       } catch {
         alert("Não foi possível carregar este arquivo. Tente outro formato.");
       }
@@ -92,10 +94,10 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
     e.preventDefault();
     onSave(formData);
     saveAdminCredentials(adminUser, adminPass);
-    showToast("Alterações e dados salvos com sucesso!");
+    showToast("Fotos, vídeos e dados salvos no banco de dados com sucesso!");
     setTimeout(() => {
       onClose();
-    }, 600);
+    }, 700);
   };
 
   const handleReset = () => {
@@ -118,8 +120,8 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
               <h2 className="font-serif text-base sm:text-lg font-semibold text-stone-900 leading-tight">
                 Painel Administrativo da Clínica
               </h2>
-              <p className="text-[10px] text-stone-500">
-                Envie fotos e vídeos do seu celular para o site
+              <p className="text-[10px] text-[#8C6D1F] font-medium flex items-center gap-1">
+                <span>●</span> Banco de Dados na Nuvem: Fotos e vídeos sincronizados em todos os aparelhos
               </p>
             </div>
           </div>

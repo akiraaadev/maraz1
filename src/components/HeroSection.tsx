@@ -1,11 +1,11 @@
 import React from "react";
 import { MessageCircle } from "lucide-react";
-import { createWhatsAppLink } from "../data/initialClinicData";
+import { createWhatsAppLink, INITIAL_CLINIC_DATA } from "../data/initialClinicData";
 
 interface HeroSectionProps {
-  photoUrl: string;
-  whatsappNumber: string;
-  whatsappMessage: string;
+  photoUrl?: string;
+  whatsappNumber?: string;
+  whatsappMessage?: string;
   ctaText?: string;
 }
 
@@ -15,6 +15,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   whatsappMessage,
   ctaText = "Fale Conosco",
 }) => {
+  const safePhoto = photoUrl || INITIAL_CLINIC_DATA.hero.photo;
   const waLink = createWhatsAppLink(whatsappNumber, whatsappMessage);
 
   return (
@@ -24,7 +25,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     >
       {/* Foto do cliente / médico */}
       <img
-        src={photoUrl}
+        src={safePhoto}
         alt="Foto principal"
         referrerPolicy="no-referrer"
         className="absolute inset-0 w-full h-full object-cover object-center select-none"

@@ -1,16 +1,20 @@
 import React from "react";
 import { Sparkles, ShieldCheck, Award, MessageCircle } from "lucide-react";
-import { Professional, createWhatsAppLink } from "../data/initialClinicData";
+import { Professional, INITIAL_CLINIC_DATA, createWhatsAppLink } from "../data/initialClinicData";
 
 interface ProfessionalsSectionProps {
-  professionals: Professional[];
-  whatsappNumber: string;
+  professionals?: Professional[];
+  whatsappNumber?: string;
 }
 
 export const ProfessionalsSection: React.FC<ProfessionalsSectionProps> = ({
   professionals,
   whatsappNumber,
 }) => {
+  const safeProfessionals = (Array.isArray(professionals) && professionals.length > 0)
+    ? professionals
+    : INITIAL_CLINIC_DATA.professionals;
+
   return (
     <section id="profissionais" className="w-full py-16 sm:py-20 px-4 bg-white relative">
       <div className="max-w-xl mx-auto">
@@ -34,7 +38,7 @@ export const ProfessionalsSection: React.FC<ProfessionalsSectionProps> = ({
 
         {/* List of Professionals */}
         <div className="space-y-4">
-          {professionals.map((prof) => {
+          {safeProfessionals.map((prof) => {
             const waProfLink = createWhatsAppLink(
               whatsappNumber,
               `Olá! Gostaria de agendar uma consulta presencial com ${prof.name} (${prof.role}).`
