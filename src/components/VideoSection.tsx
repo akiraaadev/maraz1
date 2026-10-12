@@ -181,12 +181,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             {/* Subtle scrim for controls visibility */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
 
-            {/* Top Bar: Pill com status de áudio e botão interativo */}
-            <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[11px] text-white/90">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-medium text-xs tracking-wide">Clínica Mara Mendes</span>
-              </div>
+            {/* Top Bar: Botão de som */}
+            <div className="absolute top-4 right-4 z-20 pointer-events-auto">
 
               {/* Botão de Som no topo */}
               <button

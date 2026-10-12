@@ -38,19 +38,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Camada com filtro meio escuro para dar o efeito cinematográfico */}
       <div className="absolute inset-0 bg-black/45 pointer-events-none" />
 
-      {/* Monograma / Nome da clínica discreto no topo com efeito de fade in */}
-      <motion.div
-        initial={{ opacity: 0, y: -15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-        className="absolute top-6 left-0 right-0 z-10 flex justify-center pointer-events-none"
-      >
-        <div className="px-3.5 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-center">
-          <span className="font-serif text-[13px] tracking-widest text-[#F4E3A1] uppercase font-light">
-            Clínica Mara Mendes
-          </span>
-        </div>
-      </motion.div>
+
 
       {/* Único botãozinho: Fale Conosco -> direciona para o WhatsApp com animação de aparição */}
       <motion.div

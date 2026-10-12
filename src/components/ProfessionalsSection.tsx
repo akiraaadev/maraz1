@@ -75,21 +75,6 @@ export const ProfessionalsSection: React.FC<ProfessionalsSectionProps> = ({
                 className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 select-none"
               />
 
-              {/* Degradê inferior suave */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-
-              {/* Selo dourado de certificação */}
-              <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-xs flex items-center gap-1 text-[#855E1C] shadow-sm border border-[#E6DFD5]">
-                <Award className="w-3 h-3 text-[#B8860B]" />
-                <span className="text-[10px] font-semibold tracking-wide">Certificada</span>
-              </div>
-
-              {/* Nome discreto sobre a foto no mobile */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white sm:hidden pointer-events-none">
-                <p className="text-[11px] font-medium tracking-wide drop-shadow-md">
-                  {safeProfessional.name}
-                </p>
-              </div>
             </motion.div>
 
             {/* LADO 2: INFORMAÇÕES DA PROFISSIONAL COM EFEITO NAS LETRAS E TEXTOS */}

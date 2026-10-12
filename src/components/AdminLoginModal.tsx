@@ -126,15 +126,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
             </div>
           </div>
 
-          {/* Dica de Acesso Padrão */}
-          <div className="p-2.5 bg-[#FAF9F6] border border-[#E8DFD3] rounded-lg text-[11px] text-stone-600 space-y-0.5">
-            <div className="flex items-center gap-1 font-semibold text-[#855E1C]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#B8860B]" />
-              <span>Acesso Inicial Pré-configurado:</span>
-            </div>
-            <p>Usuário: <code className="font-mono font-bold text-stone-900">admin</code></p>
-            <p>Senha: <code className="font-mono font-bold text-stone-900">aurum2026</code></p>
-          </div>
+
 
           {/* Actions */}
           <div className="pt-2">
