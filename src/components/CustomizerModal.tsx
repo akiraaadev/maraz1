@@ -13,7 +13,7 @@ import {
   LogOut,
   Image as ImageIcon,
 } from "lucide-react";
-import { ClinicData } from "../data/initialClinicData";
+import { ClinicData, INITIAL_CLINIC_DATA } from "../data/initialClinicData";
 import { saveMediaFile, fileToDataUrl } from "../utils/mediaStorage";
 import { getAdminCredentials, saveAdminCredentials } from "./AdminLoginModal";
 
@@ -62,17 +62,19 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
 
     try {
       setIsUploading(typeKey);
-      showToast("Carregando arquivo do celular...");
+      showToast("Salvando arquivo no dispositivo...");
 
-      // Salva no IndexedDB de alta capacidade para vídeos e imagens
-      const mediaKey = `${typeKey}_${Date.now()}`;
-      const url = await saveMediaFile(mediaKey, file);
+      // Chaves de slot fixas para garantir reidratação em IndexedDB após refresh
+      let slotKey = typeKey;
+      if (typeKey === "hero") slotKey = "hero_photo";
+      if (typeKey === "video") slotKey = "video_main";
+      if (typeKey === "videoPoster") slotKey = "video_poster";
 
-      onSuccessUrl(url);
-      showToast("Arquivo carregado com sucesso!");
+      const result = await saveMediaFile(slotKey, file);
+      onSuccessUrl(result.displayUrl);
+      showToast(`Arquivo salvo com sucesso! (${result.sizeFormatted})`);
     } catch (err) {
-      console.error("Erro no upload do celular:", err);
-      // Fallback para DataURL
+      console.error("Erro no upload:", err);
       try {
         const dataUrl = await fileToDataUrl(file);
         onSuccessUrl(dataUrl);
@@ -82,6 +84,7 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
       }
     } finally {
       setIsUploading(null);
+      e.target.value = "";
     }
   };
 
@@ -275,6 +278,22 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                   />
                 </label>
 
+                {formData.hero.photo !== INITIAL_CLINIC_DATA.hero.photo && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        hero: { ...formData.hero, photo: INITIAL_CLINIC_DATA.hero.photo },
+                      })
+                    }
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-100 text-[11px] transition-colors"
+                  >
+                    <RotateCcw className="w-3 h-3 text-stone-500" />
+                    <span>Restaurar Foto Original Padrão</span>
+                  </button>
+                )}
+
                 <div className="pt-1">
                   <label className="block text-[10px] text-stone-500 mb-0.5">
                     Ou cole o link direto da imagem:
@@ -324,26 +343,44 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                   Você pode selecionar qualquer vídeo gravado no celular (.mp4, .mov, etc.) para rodar em tela cheia na página.
                 </p>
 
-                {/* Botão de Upload de Vídeo do Celular */}
-                <label className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-stone-900 text-white font-semibold cursor-pointer shadow-sm hover:bg-stone-800 active:scale-98 transition-all">
-                  <Upload className="w-4 h-4 text-[#D4AF37]" />
-                  <span>
-                    {isUploading === "video" ? "Carregando vídeo do celular..." : "Selecionar Vídeo Gravado no Celular"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/quicktime,video/*"
-                    className="hidden"
-                    onChange={(e) =>
-                      handleFileUpload(e, "video", (url) =>
+                {/* Botões de Ação do Vídeo */}
+                <div className="flex flex-col gap-2">
+                  <label className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-stone-900 text-white font-semibold cursor-pointer shadow-sm hover:bg-stone-800 active:scale-98 transition-all">
+                    <Upload className="w-4 h-4 text-[#D4AF37]" />
+                    <span>
+                      {isUploading === "video" ? "Salvando vídeo do celular..." : "Selecionar Vídeo Gravado no Celular"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/quicktime,video/webm,video/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleFileUpload(e, "video", (url) =>
+                          setFormData({
+                            ...formData,
+                            video: { ...formData.video, videoUrl: url },
+                          })
+                        )
+                      }
+                    />
+                  </label>
+
+                  {formData.video.videoUrl !== INITIAL_CLINIC_DATA.video.videoUrl && (
+                    <button
+                      type="button"
+                      onClick={() =>
                         setFormData({
                           ...formData,
-                          video: { ...formData.video, videoUrl: url },
+                          video: { ...formData.video, videoUrl: INITIAL_CLINIC_DATA.video.videoUrl },
                         })
-                      )
-                    }
-                  />
-                </label>
+                      }
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-100 text-[11px] transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3 text-stone-500" />
+                      <span>Restaurar Vídeo Original Padrão</span>
+                    </button>
+                  )}
+                </div>
 
                 {/* Prévia do Vídeo */}
                 <div className="rounded-xl overflow-hidden border border-[#D4AF37]/50 aspect-[9/16] max-h-56 mx-auto bg-black relative shadow-md flex items-center justify-center">
@@ -356,9 +393,28 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                   />
                 </div>
 
+                {/* Input opcional de link direto ou YouTube */}
+                <div>
+                  <label className="block text-[10px] text-stone-500 mb-0.5">
+                    Ou cole o link de um vídeo (YouTube, Vimeo ou link .mp4):
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.video.videoUrl}
+                    placeholder="https://..."
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        video: { ...formData.video, videoUrl: e.target.value },
+                      })
+                    }
+                    className="w-full px-2.5 py-1.5 text-xs border border-stone-300 rounded-lg"
+                  />
+                </div>
+
                 {/* Foto de Capa do Vídeo */}
-                <div className="pt-2 border-t border-stone-200">
-                  <label className="block text-xs font-semibold text-stone-800 mb-1">
+                <div className="pt-2 border-t border-stone-200 space-y-2">
+                  <label className="block text-xs font-semibold text-stone-800">
                     Foto de Capa do Vídeo (Poster Vertical)
                   </label>
                   <label className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[#D4AF37] text-stone-900 bg-white hover:bg-stone-50 font-medium cursor-pointer transition-all">
@@ -380,6 +436,22 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                       }
                     />
                   </label>
+
+                  {formData.video.poster !== INITIAL_CLINIC_DATA.video.poster && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          video: { ...formData.video, poster: INITIAL_CLINIC_DATA.video.poster },
+                        })
+                      }
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-stone-200 text-stone-600 hover:bg-stone-100 text-[11px] transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3 text-stone-500" />
+                      <span>Restaurar Capa Padrão</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -428,7 +500,7 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                           accept="image/*"
                           className="hidden"
                           onChange={(e) =>
-                            handleFileUpload(e, `before_${c.id}`, (url) => {
+                            handleFileUpload(e, `case_${c.id}_before`, (url) => {
                               const updated = [...formData.beforeAfterCases];
                               updated[index].beforeImage = url;
                               setFormData({ ...formData, beforeAfterCases: updated });
@@ -456,7 +528,7 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                           accept="image/*"
                           className="hidden"
                           onChange={(e) =>
-                            handleFileUpload(e, `after_${c.id}`, (url) => {
+                            handleFileUpload(e, `case_${c.id}_after`, (url) => {
                               const updated = [...formData.beforeAfterCases];
                               updated[index].afterImage = url;
                               setFormData({ ...formData, beforeAfterCases: updated });
@@ -469,6 +541,22 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {INITIAL_CLINIC_DATA.beforeAfterCases[index] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const orig = INITIAL_CLINIC_DATA.beforeAfterCases[index];
+                        const updated = [...formData.beforeAfterCases];
+                        updated[index] = { ...updated[index], beforeImage: orig.beforeImage, afterImage: orig.afterImage };
+                        setFormData({ ...formData, beforeAfterCases: updated });
+                      }}
+                      className="text-[10px] text-stone-500 hover:text-stone-800 flex items-center gap-1 pt-1"
+                    >
+                      <RotateCcw className="w-2.5 h-2.5" />
+                      <span>Restaurar fotos originais deste caso</span>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -563,6 +651,21 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                         <img src={prof.photo} alt={prof.name} className="w-full h-full object-cover" />
                       </div>
                     </div>
+                    {INITIAL_CLINIC_DATA.professionals[index] && formData.professionals[index].photo !== INITIAL_CLINIC_DATA.professionals[index].photo && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const orig = INITIAL_CLINIC_DATA.professionals[index];
+                          const updated = [...formData.professionals];
+                          updated[index] = { ...updated[index], photo: orig.photo };
+                          setFormData({ ...formData, professionals: updated });
+                        }}
+                        className="text-[10px] text-stone-500 hover:text-stone-800 flex items-center gap-1 pt-1"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>Restaurar foto original deste profissional</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -624,6 +727,21 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                         <img src={photo.image} alt={photo.title} className="w-full h-full object-cover" />
                       </div>
                     </div>
+                    {INITIAL_CLINIC_DATA.clinicPhotos[index] && formData.clinicPhotos[index].image !== INITIAL_CLINIC_DATA.clinicPhotos[index].image && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const orig = INITIAL_CLINIC_DATA.clinicPhotos[index];
+                          const updated = [...formData.clinicPhotos];
+                          updated[index] = { ...updated[index], image: orig.image };
+                          setFormData({ ...formData, clinicPhotos: updated });
+                        }}
+                        className="text-[10px] text-stone-500 hover:text-stone-800 flex items-center gap-1 pt-1"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>Restaurar foto original deste ambiente</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

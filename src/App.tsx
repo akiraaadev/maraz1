@@ -18,6 +18,7 @@ import { ClinicGallerySection } from "./components/ClinicGallerySection";
 import { Footer } from "./components/Footer";
 import { CustomizerModal } from "./components/CustomizerModal";
 import { AdminLoginModal } from "./components/AdminLoginModal";
+import { hydrateClinicMedia } from "./utils/mediaStorage";
 
 export default function App() {
   const [clinicData, setClinicData] = useState<ClinicData>(() => loadClinicData());
@@ -26,8 +27,11 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Sincroniza dados com persistência local
-    setClinicData(loadClinicData());
+    // Sincroniza dados com persistência local e hidrata fotos/vídeos do IndexedDB
+    const initial = loadClinicData();
+    hydrateClinicMedia(initial).then((hydrated) => {
+      setClinicData(hydrated);
+    });
   }, []);
 
   const handleSaveData = (newData: ClinicData) => {

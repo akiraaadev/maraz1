@@ -168,11 +168,67 @@ export function loadClinicData(): ClinicData {
   return INITIAL_CLINIC_DATA;
 }
 
+export function sanitizeClinicDataForStorage(data: ClinicData): ClinicData {
+  const sanitized = JSON.parse(JSON.stringify(data)) as ClinicData;
+
+  // Substitui URLs blob: temporárias pelas chaves fixas do IndexedDB
+  if (sanitized.hero?.photo?.startsWith("blob:")) {
+    sanitized.hero.photo = "idb://hero_photo";
+  }
+
+  if (sanitized.video) {
+    if (sanitized.video.videoUrl?.startsWith("blob:")) {
+      sanitized.video.videoUrl = "idb://video_main";
+    }
+    if (sanitized.video.poster?.startsWith("blob:")) {
+      sanitized.video.poster = "idb://video_poster";
+    }
+  }
+
+  if (Array.isArray(sanitized.beforeAfterCases)) {
+    sanitized.beforeAfterCases.forEach((c) => {
+      if (c.beforeImage?.startsWith("blob:")) {
+        c.beforeImage = `idb://case_${c.id}_before`;
+      }
+      if (c.afterImage?.startsWith("blob:")) {
+        c.afterImage = `idb://case_${c.id}_after`;
+      }
+    });
+  }
+
+  if (Array.isArray(sanitized.professionals)) {
+    sanitized.professionals.forEach((p) => {
+      if (p.photo?.startsWith("blob:")) {
+        p.photo = `idb://prof_${p.id}`;
+      }
+    });
+  }
+
+  if (Array.isArray(sanitized.clinicPhotos)) {
+    sanitized.clinicPhotos.forEach((cp) => {
+      if (cp.image?.startsWith("blob:")) {
+        cp.image = `idb://clinic_${cp.id}`;
+      }
+    });
+  }
+
+  return sanitized;
+}
+
 export function saveClinicData(data: ClinicData): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const toSave = sanitizeClinicDataForStorage(data);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch (err) {
-    console.warn("Erro ao salvar dados locais da clínica:", err);
+    console.warn("Aviso ao salvar dados no localStorage (tentando modo compacto):", err);
+    try {
+      const compact = sanitizeClinicDataForStorage(data);
+      // Se estourar a cota de 5MB do localStorage, converte DataURLs pesadas para idb://
+      if (compact.hero.photo?.startsWith("data:")) compact.hero.photo = "idb://hero_photo";
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(compact));
+    } catch (criticalErr) {
+      console.error("Erro crítico ao persistir dados da clínica:", criticalErr);
+    }
   }
 }
 

@@ -15,8 +15,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const isYouTube = videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
-  const isVimeo = videoUrl.includes("vimeo.com");
+  const safeVideoUrl = videoUrl || "";
+  const isYouTube = Boolean(safeVideoUrl && (safeVideoUrl.includes("youtube.com") || safeVideoUrl.includes("youtu.be")));
+  const isVimeo = Boolean(safeVideoUrl && safeVideoUrl.includes("vimeo.com"));
 
   const getYouTubeEmbedUrl = (url: string) => {
     let videoId = "";
@@ -31,7 +32,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   };
 
   const togglePlay = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || !safeVideoUrl) return;
     if (videoRef.current.paused) {
       videoRef.current.play().then(() => {
         setIsPlaying(true);
