@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Play, Pause, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { INITIAL_CLINIC_DATA } from "../data/initialClinicData";
 
 interface VideoSectionProps {
@@ -12,9 +12,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   posterUrl,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Default muted to ensure seamless browser autoplay
   const [progress, setProgress] = useState(0);
+  const [showTapHint, setShowTapHint] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const safeVideoUrl = videoUrl || INITIAL_CLINIC_DATA.video.videoUrl;
   const safePosterUrl = posterUrl || INITIAL_CLINIC_DATA.video.poster;
@@ -28,24 +30,85 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     } else if (url.includes("watch?v=")) {
       videoId = url.split("watch?v=")[1]?.split("&")[0] || "";
     } else if (url.includes("embed/")) {
-      return url;
+      return `${url}?autoplay=1&mute=1&controls=1&playsinline=1&loop=1`;
     }
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1` : url;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&playsinline=1&loop=1` : url;
   };
 
-  const togglePlay = () => {
+  // Reprodução automática imediata ao carregar a página e ao entrar no viewport
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || isYouTube || isVimeo) return;
+
+    // Garantir muted para liberar autoplay no iOS/Android sem bloqueio
+    video.muted = isMuted;
+
+    const startPlayback = () => {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch(() => {
+            // Se o navegador bloquear por qualquer motivo, força muted e tenta novamente
+            video.muted = true;
+            setIsMuted(true);
+            video.play()
+              .then(() => setIsPlaying(true))
+              .catch((e) => console.log("Autoplay aguardando interação:", e));
+          });
+      }
+    };
+
+    startPlayback();
+
+    // IntersectionObserver para continuar tocando sempre que a seção estiver visível
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            startPlayback();
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [safeVideoUrl, isYouTube, isVimeo, isMuted]);
+
+  // Esconder a dica de áudio após 6 segundos se já começou a rodar
+  useEffect(() => {
+    if (isPlaying) {
+      const timer = setTimeout(() => {
+        setShowTapHint(false);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPlaying]);
+
+  const handleVideoTap = () => {
     if (!videoRef.current || !safeVideoUrl) return;
+
+    // Se o vídeo estiver com som mudo, o primeiro toque ativa o som
+    if (isMuted) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+      setShowTapHint(false);
+      if (videoRef.current.paused) {
+        videoRef.current.play().then(() => setIsPlaying(true));
+      }
+      return;
+    }
+
+    // Se já estiver com som, alterna entre play e pause
     if (videoRef.current.paused) {
-      videoRef.current.play().then(() => {
-        setIsPlaying(true);
-      }).catch(() => {
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          setIsMuted(true);
-          videoRef.current.play();
-          setIsPlaying(true);
-        }
-      });
+      videoRef.current.play().then(() => setIsPlaying(true));
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -55,8 +118,13 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!videoRef.current) return;
-    videoRef.current.muted = !videoRef.current.muted;
-    setIsMuted(videoRef.current.muted);
+    const nextMuted = !isMuted;
+    videoRef.current.muted = nextMuted;
+    setIsMuted(nextMuted);
+    setShowTapHint(false);
+    if (videoRef.current.paused) {
+      videoRef.current.play().then(() => setIsPlaying(true));
+    }
   };
 
   const handleTimeUpdate = () => {
@@ -68,6 +136,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
   return (
     <section
+      ref={sectionRef}
       id="video"
       className="relative w-full h-[100dvh] min-h-[100dvh] bg-stone-950 flex items-center justify-center overflow-hidden"
     >
@@ -83,7 +152,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           />
         ) : isVimeo ? (
           <iframe
-            src={safeVideoUrl}
+            src={`${safeVideoUrl}?autoplay=1&muted=1&loop=1`}
             title="Vídeo Institucional"
             className="w-full h-full border-0 object-cover"
             allow="autoplay; fullscreen; picture-in-picture"
@@ -91,14 +160,16 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           />
         ) : (
           <div
-            onClick={togglePlay}
+            onClick={handleVideoTap}
             className="relative w-full h-full cursor-pointer select-none"
           >
-            {/* HTML5 Native Video element in vertical mode */}
+            {/* HTML5 Native Video element in vertical mode with AUTOPLAY and MUTED */}
             <video
               ref={videoRef}
               src={safeVideoUrl}
               poster={safePosterUrl}
+              autoPlay
+              muted={isMuted}
               playsInline
               loop
               onTimeUpdate={handleTimeUpdate}
@@ -108,31 +179,57 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             />
 
             {/* Subtle scrim for controls visibility */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
 
-            {/* Top Sound Toggle Button */}
-            <div className="absolute top-4 right-4 z-20 pointer-events-auto">
+            {/* Top Bar: Pill com status de áudio e botão interativo */}
+            <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-auto">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 text-[11px] text-white/90">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-medium text-xs tracking-wide">Clínica Mara Mendes</span>
+              </div>
+
+              {/* Botão de Som no topo */}
               <button
                 onClick={toggleMute}
-                className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/20 hover:scale-105 active:scale-95 transition-transform shadow-lg"
-                aria-label={isMuted ? "Ativar som" : "Desativar som"}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md text-xs font-semibold transition-all shadow-lg active:scale-95 ${
+                  isMuted
+                    ? "bg-[#D4AF37] text-stone-950 border border-[#F4E3A1]"
+                    : "bg-black/70 text-white border border-white/20 hover:bg-black/90"
+                }`}
+                aria-label={isMuted ? "Ativar som do vídeo" : "Desativar som do vídeo"}
               >
                 {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-white" />
+                  <>
+                    <VolumeX className="w-3.5 h-3.5 text-stone-950 shrink-0" />
+                    <span>Ativar Som</span>
+                  </>
                 ) : (
-                  <Volume2 className="w-4 h-4 text-[#F4E3A1]" />
+                  <>
+                    <Volume2 className="w-3.5 h-3.5 text-[#F4E3A1] shrink-0" />
+                    <span>Com Áudio</span>
+                  </>
                 )}
               </button>
             </div>
 
-            {/* Central Play Button Overlay (quando pausado) */}
+            {/* Indicador suave de toque para ouvir som (desaparece gradualmente ou ao tocar) */}
+            {isMuted && showTapHint && (
+              <div className="absolute bottom-16 left-4 right-4 z-20 flex justify-center pointer-events-none transition-opacity duration-500">
+                <div className="px-4 py-2 rounded-full bg-black/75 backdrop-blur-md border border-[#D4AF37]/60 text-white text-[11px] font-medium flex items-center gap-2 shadow-xl animate-bounce">
+                  <Volume2 className="w-3.5 h-3.5 text-[#F4E3A1]" />
+                  <span>Vídeo reproduzindo · Toque na tela para ouvir</span>
+                </div>
+              </div>
+            )}
+
+            {/* Pause indicator (aparece somente se o usuário pausar manualmente) */}
             {!isPlaying && (
               <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-                <div className="w-20 h-20 rounded-full bg-black/60 backdrop-blur-md border-2 border-[#D4AF37] flex items-center justify-center shadow-2xl transition-transform transform hover:scale-105">
-                  <Play className="w-9 h-9 text-[#F4E3A1] fill-[#F4E3A1] ml-1" />
+                <div className="w-16 h-16 rounded-full bg-black/70 backdrop-blur-md border border-[#D4AF37] flex items-center justify-center shadow-2xl">
+                  <Play className="w-8 h-8 text-[#F4E3A1] fill-[#F4E3A1] ml-1" />
                 </div>
-                <div className="mt-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-xs text-[11px] font-medium text-white tracking-wider uppercase border border-white/10">
-                  Toque para assistir
+                <div className="mt-2.5 px-3 py-1 rounded-full bg-black/70 text-[11px] font-medium text-white/90">
+                  Vídeo pausado · Toque para continuar
                 </div>
               </div>
             )}

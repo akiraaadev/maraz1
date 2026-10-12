@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Sparkles, MoveHorizontal, Info, MessageCircle } from "lucide-react";
+import { motion } from "motion/react";
 import { BeforeAfterCase, INITIAL_CLINIC_DATA, createWhatsAppLink } from "../data/initialClinicData";
 
 interface BeforeAfterSectionProps {
@@ -54,8 +55,14 @@ export const BeforeAfterSection: React.FC<BeforeAfterSectionProps> = ({
   return (
     <section id="antes-e-depois" className="w-full py-16 sm:py-20 px-4 bg-[#FAF9F6] relative">
       <div className="max-w-xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-6">
+        {/* Section Header com efeito de aparição */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center mb-6"
+        >
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white border border-[#E6DFD5] mb-2.5 shadow-xs">
             <Sparkles className="w-3 h-3 text-[#B8860B]" />
             <span className="text-[10px] font-semibold tracking-wider uppercase text-[#855E1C]">
@@ -70,7 +77,7 @@ export const BeforeAfterSection: React.FC<BeforeAfterSectionProps> = ({
           <p className="text-stone-600 text-xs sm:text-[13px] max-w-sm mx-auto leading-relaxed">
             Arraste a linha dourada para o lado para comparar a transformação natural alcançada por nossos pacientes.
           </p>
-        </div>
+        </motion.div>
 
         {/* Case Switcher Tabs if multiple cases exist */}
         {safeCases.length > 1 && (

@@ -627,6 +627,38 @@ export const CustomizerModal: React.FC<CustomizerModalProps> = ({
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-[11px] font-medium text-stone-600 mb-0.5">
+                      Especialidade Principal
+                    </label>
+                    <input
+                      type="text"
+                      value={prof.specialty || ""}
+                      onChange={(e) => {
+                        const updated = [...formData.professionals];
+                        updated[index].specialty = e.target.value;
+                        setFormData({ ...formData, professionals: updated });
+                      }}
+                      className="w-full px-2.5 py-1.5 text-xs border border-stone-300 rounded-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-stone-600 mb-0.5">
+                      Biografia & Filosofia de Atendimento
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={prof.bio || ""}
+                      onChange={(e) => {
+                        const updated = [...formData.professionals];
+                        updated[index].bio = e.target.value;
+                        setFormData({ ...formData, professionals: updated });
+                      }}
+                      className="w-full px-2.5 py-1.5 text-xs border border-stone-300 rounded-md"
+                    />
+                  </div>
+
                   {/* Foto do Médico enviada do celular */}
                   <div>
                     <label className="block text-[11px] font-semibold text-stone-700 mb-1">

@@ -55,19 +55,19 @@ export interface ClinicData {
 }
 
 export const INITIAL_CLINIC_DATA: ClinicData = {
-  clinicName: "Clínica Aurum",
+  clinicName: "Clínica Mara Mendes",
   tagline: "Medicina Estética & Alta Performance",
   whatsappNumber: "5511987654321",
-  whatsappMessage: "Olá! Gostaria de agendar uma consulta e conhecer os tratamentos da Clínica Aurum.",
+  whatsappMessage: "Olá! Gostaria de agendar uma consulta com a Dra. Mara Mendes na Clínica Mara Mendes.",
   hero: {
-    doctorName: "Dra. Helena Siqueira",
+    doctorName: "Dra. Mara Mendes",
     title: "A Harmonia Natural da Sua Melhor Versão",
     subtitle: "Medicina estética de excelência, protocolos personalizados e tecnologia de ponta para realçar sua beleza com sofisticação.",
     photo: "/src/assets/images/hero_doctor_portrait_1791836405527.jpg",
     ctaText: "Fale Conosco no WhatsApp",
   },
   video: {
-    title: "Conheça a Experiência Aurum",
+    title: "Conheça a Experiência Mara Mendes",
     subtitle: "Cuidado individualizado, ética médica e os mais modernos tratamentos do mundo.",
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     poster: "/src/assets/images/vertical_story_doctor_1791839179127.jpg",
@@ -97,31 +97,13 @@ export const INITIAL_CLINIC_DATA: ClinicData = {
   ],
   professionals: [
     {
-      id: "prof-1",
-      name: "Dra. Helena Siqueira",
-      role: "Diretora Médica & Dermatologista",
-      crm: "CRM/SP 142.890 · RQE 78.432",
-      specialty: "Dermatologia Clínica, Cirúrgica e Cosmiatria Avançada",
+      id: "prof-mara-mendes",
+      name: "Dra. Mara Mendes",
+      role: "Médica & Diretora Técnica",
+      crm: "CRM 182.940 · RQE 74.321",
+      specialty: "Dermatologia Clínica, Estética & Harmonização Facial Avançada",
       photo: "/src/assets/images/hero_doctor_portrait_1791836405527.jpg",
-      bio: "Graduada pela USP com especialização em Harvard, pioneira em protocolos de rejuvenescimento tridimensional.",
-    },
-    {
-      id: "prof-2",
-      name: "Dr. Elias Thorne",
-      role: "Cirurgião Plástico & Contorno Facial",
-      crm: "CRM/SP 128.450 · RQE 69.112",
-      specialty: "Cirurgia Plástica Facial e Minilifting Endoscópico",
-      photo: "/src/assets/images/doctor_surgeon_1791836484834.jpg",
-      bio: "Membro Titular da Sociedade Brasileira de Cirurgia Plástica com mais de 14 anos dedicados à harmonia da face.",
-    },
-    {
-      id: "prof-3",
-      name: "Dra. Camila Prado",
-      role: "Médica Especialista em Cosmiatria",
-      crm: "CRM/SP 165.230 · RQE 82.901",
-      specialty: "Bioestimuladores de Colágeno e Terapias Regenerativas",
-      photo: "/src/assets/images/doctor_dermatologist_1791836434767.jpg",
-      bio: "Foco exclusivo em naturalidade e longevidade celular através de bioativos e lasers de pulso ultracurto.",
+      bio: "Especialista em medicina estética de alta precisão e rejuvenescimento facial natural. A Dra. Mara Mendes desenvolve protocolos exclusivos que unem ciência dérmica, tecnologias de última geração e um olhar artístico refinado, valorizando a identidade única de cada paciente com máxima segurança, ética e discrição.",
     },
   ],
   clinicPhotos: [
@@ -196,20 +178,28 @@ export function mergeClinicData(rawParsed: any): ClinicData {
           };
         })
       : INITIAL_CLINIC_DATA.beforeAfterCases,
-    professionals: Array.isArray(rawParsed.professionals) && rawParsed.professionals.length > 0
-      ? rawParsed.professionals.map((p: any, i: number) => {
-          const fallback = INITIAL_CLINIC_DATA.professionals[i] || INITIAL_CLINIC_DATA.professionals[0];
-          return {
-            id: p?.id || fallback.id,
-            name: p?.name || fallback.name,
-            role: p?.role || fallback.role,
-            crm: p?.crm || fallback.crm,
-            specialty: p?.specialty || fallback.specialty,
-            photo: p?.photo || fallback.photo,
-            bio: p?.bio || fallback.bio,
-          };
-        })
-      : INITIAL_CLINIC_DATA.professionals,
+    professionals: (() => {
+      const fallbackProf = INITIAL_CLINIC_DATA.professionals[0];
+      if (Array.isArray(rawParsed.professionals) && rawParsed.professionals.length > 0) {
+        // Mantém apenas a profissional única da clínica (Dra. Mara Mendes), preservando edições salvas
+        const savedMara = rawParsed.professionals.find((p: any) =>
+          p?.id === "prof-mara-mendes" || (typeof p?.name === "string" && p.name.toLowerCase().includes("mara"))
+        ) || rawParsed.professionals[0];
+
+        return [
+          {
+            id: savedMara?.id || fallbackProf.id,
+            name: savedMara?.name || fallbackProf.name,
+            role: savedMara?.role || fallbackProf.role,
+            crm: savedMara?.crm || fallbackProf.crm,
+            specialty: savedMara?.specialty || fallbackProf.specialty,
+            photo: savedMara?.photo || fallbackProf.photo,
+            bio: savedMara?.bio || fallbackProf.bio,
+          },
+        ];
+      }
+      return INITIAL_CLINIC_DATA.professionals;
+    })(),
     clinicPhotos: Array.isArray(rawParsed.clinicPhotos) && rawParsed.clinicPhotos.length > 0
       ? rawParsed.clinicPhotos.map((cp: any, i: number) => {
           const fallback = INITIAL_CLINIC_DATA.clinicPhotos[i] || INITIAL_CLINIC_DATA.clinicPhotos[0];
